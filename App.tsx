@@ -55,7 +55,14 @@ const App: React.FC = () => {
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const { sections } = siteContent;
+  const { site, sections } = siteContent;
+
+  // Đồng bộ <title> của tab với cấu hình trong content/site.json
+  useEffect(() => {
+    if (site?.site?.title) {
+      document.title = site.site.title;
+    }
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
