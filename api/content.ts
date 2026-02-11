@@ -41,31 +41,21 @@ async function getFileContent(path: string) {
   return { content: decoded, sha: json.sha };
 }
 
-async function putFileContent(path: string, content: string, sha: string, message: string) {
-  const bodyBase = {
+async function putFileContent(path: string, content: string, message: string) {
+  // Đọc SHA mới nhất trước mỗi lần ghi để tránh xung đột
+  const latest = await getFileContent(path);
+
+  const body = {
     message,
     content: Buffer.from(content, 'utf-8').toString('base64'),
+    sha: latest.sha,
     branch: BRANCH,
   };
 
-  try {
-    await githubRequest(`/repos/${OWNER}/${REPO}/contents/${path}`, {
-      method: 'PUT',
-      body: JSON.stringify({ ...bodyBase, sha }),
-    });
-  } catch (error: any) {
-    // Nếu có conflict SHA (409) vì file vừa được cập nhật bởi lần lưu trước,
-    // ta lấy SHA mới nhất rồi thử lại một lần cho nhẹ đầu user.
-    if (error.message && error.message.includes('409')) {
-      const latest = await getFileContent(path);
-      await githubRequest(`/repos/${OWNER}/${REPO}/contents/${path}`, {
-        method: 'PUT',
-        body: JSON.stringify({ ...bodyBase, sha: latest.sha }),
-      });
-      return;
-    }
-    throw error;
-  }
+  await githubRequest(`/repos/${OWNER}/${REPO}/contents/${path}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -95,29 +85,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).send('Body không hợp lệ');
       }
 
-      const [siteFile, navFile, productsFile] = await Promise.all([
-        getFileContent(FILES.site),
-        getFileContent(FILES.navigation),
-        getFileContent(FILES.products),
-      ]);
-
       await Promise.all([
         putFileContent(
           FILES.site,
           JSON.stringify(body.site, null, 2),
-          siteFile.sha,
           'chore(content): update site.json from admin',
         ),
         putFileContent(
           FILES.navigation,
           JSON.stringify(body.navigation, null, 2),
-          navFile.sha,
           'chore(content): update navigation.json from admin',
         ),
         putFileContent(
           FILES.products,
           JSON.stringify(body.products, null, 2),
-          productsFile.sha,
           'chore(content): update products.json from admin',
         ),
       ]);
