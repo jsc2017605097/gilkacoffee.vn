@@ -1,22 +1,14 @@
 
 import React, { useState } from 'react';
-import { Sparkles, Send, Loader2, Bot } from 'lucide-react';
-import { getCoffeeRecommendation } from '../services/geminiService';
+import { Sparkles, Send, Bot } from 'lucide-react';
 
 const CoffeeAssistant: React.FC = () => {
   const [input, setInput] = useState('');
-  const [response, setResponse] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-
-    setLoading(true);
-    setResponse('');
-    const result = await getCoffeeRecommendation(input);
-    setResponse(result || '');
-    setLoading(false);
+    // Tính năng AI đã được tắt
   };
 
   return (
@@ -47,35 +39,26 @@ const CoffeeAssistant: React.FC = () => {
             />
             <button
               type="submit"
-              disabled={loading}
-              className="bg-white text-stone-900 px-8 py-4 rounded-xl font-semibold hover:bg-stone-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              disabled
+              className="bg-stone-700 text-stone-400 px-8 py-4 rounded-xl font-semibold cursor-not-allowed flex items-center justify-center gap-2 opacity-50"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Send className="w-5 h-5" /> Phân tích</>}
+              <Send className="w-5 h-5" /> Phân tích
             </button>
           </form>
 
-          {loading && (
-            <div className="flex flex-col items-center justify-center py-12 text-stone-500 animate-pulse">
-              <Bot className="w-12 h-12 mb-4" />
-              <p>Đang trao đổi với chuyên gia rang xay...</p>
-            </div>
-          )}
-
-          {response && !loading && (
-            <div className="bg-stone-900/80 border border-stone-700 p-6 rounded-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-stone-800 rounded-lg">
-                  <Bot className="w-6 h-6 text-amber-400" />
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2 text-stone-300 uppercase tracking-widest text-xs">Gợi ý từ Gilka</h4>
-                  <div className="text-stone-100 font-light leading-relaxed whitespace-pre-wrap">
-                    {response}
-                  </div>
-                </div>
+          <div className="bg-stone-900/80 border border-stone-700 p-6 rounded-xl">
+            <div className="flex items-start gap-4">
+              <div className="p-2 bg-stone-800 rounded-lg">
+                <Bot className="w-6 h-6 text-amber-400" />
+              </div>
+              <div>
+                <h4 className="font-medium mb-2 text-stone-300 uppercase tracking-widest text-xs">Thông báo</h4>
+                <p className="text-stone-100 font-light leading-relaxed">
+                  Tính năng trợ lý AI tạm thời không khả dụng. Vui lòng tham khảo bộ sưu tập cà phê của chúng tôi ở trên để tìm sản phẩm phù hợp với khẩu vị của bạn.
+                </p>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </section>
