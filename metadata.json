@@ -1,6 +1,6 @@
 {
-  "name": "Gilka Coffee Clone - Premium Roastery",
-  "description": "A minimalist, high-end coffee store inspired by Gilka, featuring a Gemini-powered coffee recommendation assistant, product catalog, and seamless shopping experience.",
+  "name": "Bản sao Cà phê Gilka - Xưởng rang Thượng hạng",
+  "description": "Một trang web cửa hàng cà phê cao cấp lấy cảm hứng từ Gilka, tích hợp trợ lý gợi ý cà phê bằng AI Gemini, danh mục sản phẩm và trải nghiệm mua sắm mượt mà.",
   "requestFramePermissions": [
     "geolocation"
   ]

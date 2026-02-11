@@ -25,7 +25,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuantity, o
           <div className="h-full flex flex-col bg-white shadow-2xl">
             <div className="flex-1 py-6 overflow-y-auto px-4 sm:px-6">
               <div className="flex items-start justify-between">
-                <h2 className="text-2xl font-semibold text-stone-900 serif">Your Shopping Bag</h2>
+                <h2 className="text-2xl font-semibold text-stone-900 serif">Giỏ hàng của bạn</h2>
                 <button onClick={onClose} className="p-2 text-stone-400 hover:text-stone-500">
                   <X className="w-6 h-6" />
                 </button>
@@ -35,12 +35,12 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuantity, o
                 {items.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-stone-400">
                     <ShoppingBag className="w-16 h-16 mb-4 opacity-20" />
-                    <p className="text-lg">Your bag is currently empty.</p>
+                    <p className="text-lg">Giỏ hàng hiện đang trống.</p>
                     <button 
                       onClick={onClose}
                       className="mt-4 text-stone-900 underline underline-offset-4 hover:text-stone-600 transition-colors"
                     >
-                      Continue Shopping
+                      Tiếp tục mua sắm
                     </button>
                   </div>
                 ) : (
@@ -54,7 +54,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuantity, o
                           <div>
                             <div className="flex justify-between text-base font-medium text-stone-900">
                               <h3 className="serif">{item.name}</h3>
-                              <p className="ml-4">${item.price * item.quantity}</p>
+                              <p className="ml-4">{(item.price * item.quantity).toLocaleString('vi-VN')}đ</p>
                             </div>
                             <p className="mt-1 text-sm text-stone-500">{item.origin}</p>
                           </div>
@@ -92,13 +92,13 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuantity, o
             {items.length > 0 && (
               <div className="border-t border-stone-200 py-6 px-4 sm:px-6 bg-stone-50">
                 <div className="flex justify-between text-base font-medium text-stone-900">
-                  <p>Subtotal</p>
-                  <p>${subtotal.toFixed(2)}</p>
+                  <p>Tạm tính</p>
+                  <p>{subtotal.toLocaleString('vi-VN')}đ</p>
                 </div>
-                <p className="mt-0.5 text-sm text-stone-500">Shipping and taxes calculated at checkout.</p>
+                <p className="mt-0.5 text-sm text-stone-500">Phí vận chuyển và thuế sẽ được tính khi thanh toán.</p>
                 <div className="mt-6">
                   <button className="w-full flex justify-center items-center px-6 py-4 border border-transparent bg-stone-900 text-base font-medium text-white shadow-sm hover:bg-stone-800 transition-all uppercase tracking-widest">
-                    Checkout Now
+                    Thanh toán ngay
                   </button>
                 </div>
               </div>

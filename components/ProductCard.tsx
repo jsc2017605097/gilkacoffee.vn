@@ -32,7 +32,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
             <h3 className="text-xl font-medium text-stone-900 mb-1 serif">{product.name}</h3>
             <p className="text-xs text-stone-500 uppercase tracking-widest">{product.origin}</p>
           </div>
-          <span className="text-lg font-medium text-stone-900">${product.price}</span>
+          <span className="text-lg font-medium text-stone-900">
+            {product.price.toLocaleString('vi-VN')}đ
+          </span>
         </div>
         
         <p className="text-sm text-stone-600 mb-4 line-clamp-2 font-light italic">

@@ -28,11 +28,11 @@ const CoffeeAssistant: React.FC = () => {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-stone-800 border border-stone-700 rounded-full text-stone-400 text-xs uppercase tracking-widest mb-6">
             <Sparkles className="w-3 h-3 text-amber-400" />
-            AI Coffee Concierge
+            Trợ lý Cà phê AI
           </div>
-          <h2 className="text-4xl md:text-5xl font-light serif mb-4">Find your perfect brew.</h2>
+          <h2 className="text-4xl md:text-5xl font-light serif mb-4">Tìm vị cà phê hoàn hảo.</h2>
           <p className="text-stone-400 font-light text-lg">
-            Describe how you like your coffee (e.g., "bright and fruity" or "rich and dark") and let our AI assistant suggest the best match for you.
+            Hãy mô tả khẩu vị của bạn (ví dụ: "chua thanh và hương trái cây" hoặc "đậm đà vị chocolate") để trợ lý AI của chúng tôi tìm ra lựa chọn tốt nhất.
           </p>
         </div>
 
@@ -42,7 +42,7 @@ const CoffeeAssistant: React.FC = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Tell me about your coffee preferences..."
+              placeholder="Bạn đang tìm kiếm hương vị cà phê như thế nào?..."
               className="flex-grow bg-stone-900 border border-stone-700 text-white px-6 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-600 transition-all"
             />
             <button
@@ -50,14 +50,14 @@ const CoffeeAssistant: React.FC = () => {
               disabled={loading}
               className="bg-white text-stone-900 px-8 py-4 rounded-xl font-semibold hover:bg-stone-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Send className="w-5 h-5" /> Analyze</>}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Send className="w-5 h-5" /> Phân tích</>}
             </button>
           </form>
 
           {loading && (
             <div className="flex flex-col items-center justify-center py-12 text-stone-500 animate-pulse">
               <Bot className="w-12 h-12 mb-4" />
-              <p>Consulting our head roaster...</p>
+              <p>Đang trao đổi với chuyên gia rang xay...</p>
             </div>
           )}
 
@@ -68,7 +68,7 @@ const CoffeeAssistant: React.FC = () => {
                   <Bot className="w-6 h-6 text-amber-400" />
                 </div>
                 <div>
-                  <h4 className="font-medium mb-2 text-stone-300 uppercase tracking-widest text-xs">Gilka's Recommendation</h4>
+                  <h4 className="font-medium mb-2 text-stone-300 uppercase tracking-widest text-xs">Gợi ý từ Gilka</h4>
                   <div className="text-stone-100 font-light leading-relaxed whitespace-pre-wrap">
                     {response}
                   </div>
