@@ -59,8 +59,8 @@ const App: React.FC = () => {
 
   // Đồng bộ <title> của tab với cấu hình trong content/site.json
   useEffect(() => {
-    if (site?.site?.title) {
-      document.title = site.site.title;
+    if (site?.title) {
+      document.title = site.title;
     }
   }, []);
 
