@@ -1,0 +1,92 @@
+{
+  "site": {
+    "title": "Gilka Coffee Clone | Premium Roastery",
+    "description": "Một trang web cửa hàng cà phê cao cấp lấy cảm hứng từ Gilka, với trải nghiệm mua sắm mượt mà và nội dung có thể cấu hình.",
+    "faviconPath": "/favicon.ico",
+    "logoText": "GILKA"
+  },
+  "hero": {
+    "backgroundImage": "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=2000&auto=format&fit=crop",
+    "title": "Cà phê Đặc sản,\nRang bằng Tâm huyết.",
+    "subtitle": "Từ những nông trại trên cao nguyên Ethiopia đến xưởng rang nhỏ trong thành phố, chúng tôi mang đến cho bạn những hạt cà phê theo mùa tốt nhất.",
+    "primaryCta": {
+      "label": "Mua ngay bộ sưu tập",
+      "href": "#/shop"
+    },
+    "secondaryCta": {
+      "label": "Đăng ký & Tiết kiệm",
+      "href": "#/subscription"
+    }
+  },
+  "sections": {
+    "featured": {
+      "title": "Lựa chọn tinh tuyển",
+      "subtitle": "Nguồn cung bền vững, rang xay tỉ mỉ và giao tận tay bạn luôn tươi mới."
+    },
+    "story": {
+      "badge": "Giao dịch trực tiếp",
+      "title": "Minh bạch từ nông trại đến ly cà phê.",
+      "body": "Tại Gilka, chúng tôi tin rằng cà phê không chỉ là một thói quen buổi sáng. Đó là một sản phẩm nông nghiệp phức hợp nuôi sống hàng triệu người. Chúng tôi làm việc trực tiếp với các nhà sản xuất ở Đông Phi và Nam Mỹ, đảm bảo họ nhận được thù lao xứng đáng cao hơn mức giá thương mại công bằng.",
+      "image": "https://images.unsplash.com/photo-1511537190424-bbbab87ac5eb?q=80&w=1200&auto=format&fit=crop",
+      "highlights": [
+        {
+          "title": "Tuyển chọn theo mùa",
+          "body": "Chúng tôi rang từng mẻ nhỏ để làm nổi bật hương vị đặc trưng của từng vụ thu hoạch."
+        },
+        {
+          "title": "Bao bì bền vững",
+          "body": "Túi đựng tự phân hủy 100% và vật liệu vận chuyển có thể tái chế."
+        }
+      ],
+      "cta": {
+        "label": "Tìm hiểu thêm về sứ mệnh của chúng tôi",
+        "href": "#/mission"
+      }
+    },
+    "newsletter": {
+      "icon": "mail",
+      "title": "Nhật ký Gilka",
+      "body": "Đăng ký để nhận thông báo sớm về các mẻ rang đặc biệt, hướng dẫn pha chế và những câu chuyện từ vùng nguyên liệu.",
+      "placeholder": "Địa chỉ email của bạn",
+      "ctaLabel": "Đăng ký ngay"
+    },
+    "footer": {
+      "brandTagline": "Nâng tầm trải nghiệm cà phê của bạn thông qua nguồn cung bền vững và quy trình rang xay tỉ mỉ.",
+      "shopColumn": {
+        "title": "Cửa hàng",
+        "links": [
+          "Tất cả cà phê",
+          "Gói định kỳ",
+          "Dụng cụ pha chế",
+          "Thẻ quà tặng"
+        ]
+      },
+      "supportColumn": {
+        "title": "Hỗ trợ",
+        "links": [
+          "Chính sách vận chuyển",
+          "Đổi trả & Hoàn tiền",
+          "Cung cấp sỉ",
+          "Liên hệ"
+        ]
+      },
+      "visitUs": {
+        "title": "Ghé thăm chúng tôi",
+        "addressLines": [
+          "123 Đường Roastery",
+          "Khu Phố Nghệ Thuật",
+          "Portland, OR 97201"
+        ]
+      },
+      "legal": {
+        "copyright": "© 2024 Gilka Coffee Roastery. Bảo lưu mọi quyền.",
+        "links": [
+          "Chính sách bảo mật",
+          "Điều khoản dịch vụ"
+        ]
+      }
+    }
+  }
+}
+
+
