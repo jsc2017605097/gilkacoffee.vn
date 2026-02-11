@@ -41,20 +41,101 @@ async function getFileContent(path: string) {
   return { content: decoded, sha: json.sha };
 }
 
-async function putFileContent(path: string, content: string, message: string) {
-  // Đọc SHA mới nhất trước mỗi lần ghi để tránh xung đột
-  const latest = await getFileContent(path);
+// Tạo commit mới cập nhật 3 file content bằng Git API cấp thấp để tránh lỗi SHA 409
+async function commitAllContentFiles(payload: {
+  site: any;
+  navigation: any;
+  products: any;
+}) {
+  // 1) Lấy ref hiện tại của branch
+  const refRes = await githubRequest(`/repos/${OWNER}/${REPO}/git/ref/heads/${BRANCH}`);
+  const refJson = (await refRes.json()) as any;
+  const currentCommitSha = refJson.object.sha;
 
-  const body = {
-    message,
-    content: Buffer.from(content, 'utf-8').toString('base64'),
-    sha: latest.sha,
-    branch: BRANCH,
-  };
+  // 2) Lấy commit hiện tại để biết tree gốc
+  const commitRes = await githubRequest(`/repos/${OWNER}/${REPO}/git/commits/${currentCommitSha}`);
+  const commitJson = (await commitRes.json()) as any;
+  const baseTreeSha = commitJson.tree.sha;
 
-  await githubRequest(`/repos/${OWNER}/${REPO}/contents/${path}`, {
-    method: 'PUT',
-    body: JSON.stringify(body),
+  // 3) Tạo blob cho từng file JSON
+  const [siteBlobRes, navBlobRes, productsBlobRes] = await Promise.all([
+    githubRequest(`/repos/${OWNER}/${REPO}/git/blobs`, {
+      method: 'POST',
+      body: JSON.stringify({
+        content: JSON.stringify(payload.site, null, 2),
+        encoding: 'utf-8',
+      }),
+    }),
+    githubRequest(`/repos/${OWNER}/${REPO}/git/blobs`, {
+      method: 'POST',
+      body: JSON.stringify({
+        content: JSON.stringify(payload.navigation, null, 2),
+        encoding: 'utf-8',
+      }),
+    }),
+    githubRequest(`/repos/${OWNER}/${REPO}/git/blobs`, {
+      method: 'POST',
+      body: JSON.stringify({
+        content: JSON.stringify(payload.products, null, 2),
+        encoding: 'utf-8',
+      }),
+    }),
+  ]);
+
+  const siteBlob = (await siteBlobRes.json()) as any;
+  const navBlob = (await navBlobRes.json()) as any;
+  const productsBlob = (await productsBlobRes.json()) as any;
+
+  // 4) Tạo tree mới trên baseTreeSha với 3 file content
+  const treeRes = await githubRequest(`/repos/${OWNER}/${REPO}/git/trees`, {
+    method: 'POST',
+    body: JSON.stringify({
+      base_tree: baseTreeSha,
+      tree: [
+        {
+          path: FILES.site,
+          mode: '100644',
+          type: 'blob',
+          sha: siteBlob.sha,
+        },
+        {
+          path: FILES.navigation,
+          mode: '100644',
+          type: 'blob',
+          sha: navBlob.sha,
+        },
+        {
+          path: FILES.products,
+          mode: '100644',
+          type: 'blob',
+          sha: productsBlob.sha,
+        },
+      ],
+    }),
+  });
+
+  const treeJson = (await treeRes.json()) as any;
+
+  // 5) Tạo commit mới
+  const commitMessage = 'chore(content): update site, navigation, products from admin';
+  const newCommitRes = await githubRequest(`/repos/${OWNER}/${REPO}/git/commits`, {
+    method: 'POST',
+    body: JSON.stringify({
+      message: commitMessage,
+      tree: treeJson.sha,
+      parents: [currentCommitSha],
+    }),
+  });
+
+  const newCommitJson = (await newCommitRes.json()) as any;
+
+  // 6) Cập nhật ref head của branch trỏ về commit mới (fast-forward)
+  await githubRequest(`/repos/${OWNER}/${REPO}/git/refs/heads/${BRANCH}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      sha: newCommitJson.sha,
+      force: false,
+    }),
   });
 }
 
@@ -85,23 +166,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).send('Body không hợp lệ');
       }
 
-      await Promise.all([
-        putFileContent(
-          FILES.site,
-          JSON.stringify(body.site, null, 2),
-          'chore(content): update site.json from admin',
-        ),
-        putFileContent(
-          FILES.navigation,
-          JSON.stringify(body.navigation, null, 2),
-          'chore(content): update navigation.json from admin',
-        ),
-        putFileContent(
-          FILES.products,
-          JSON.stringify(body.products, null, 2),
-          'chore(content): update products.json from admin',
-        ),
-      ]);
+      await commitAllContentFiles({
+        site: body.site,
+        navigation: body.navigation,
+        products: body.products,
+      });
 
       return res.status(200).json({ ok: true });
     } catch (error: any) {
