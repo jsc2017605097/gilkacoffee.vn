@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, CSSProperties } from 'react';
 import siteContentInitial from '../content/site.json';
 import navigationInitial from '../content/navigation.json';
 import productsInitial from '../content/products.json';
 import { Product } from '../types';
+import { Settings, Home, Package, Save, Coffee, CheckCircle, XCircle, Loader2, ChevronRight } from 'lucide-react';
 
 type SiteContent = typeof siteContentInitial;
 type NavigationContent = typeof navigationInitial;
@@ -14,241 +15,356 @@ interface ContentState {
   products: ProductsContent;
 }
 
+type Section = 'site' | 'hero' | 'products';
+
+/* ─── Design Tokens ──────────────────────────────────────────────────── */
+const C = {
+  bg:           '#F5F0EB',
+  surface:      '#FFFFFF',
+  border:       '#E8E0D8',
+  borderFocus:  '#C8860A',
+  text:         '#1C1917',
+  textMuted:    '#78716C',
+  textLight:    '#A8A29E',
+  accent:       '#C8860A',
+  accentLight:  '#FEF3C7',
+  accentText:   '#92400E',
+  green:        '#059669',
+  greenBg:      '#ECFDF5',
+  red:          '#DC2626',
+  redBg:        '#FEF2F2',
+  infoBg:       '#FFFBEB',
+  infoText:     '#92400E',
+};
+
+/* ─── Shared Styles ──────────────────────────────────────────────────── */
+const baseInput: CSSProperties = {
+  width: '100%',
+  padding: '9px 14px',
+  border: `1.5px solid ${C.border}`,
+  borderRadius: 8,
+  background: '#FAFAF9',
+  color: C.text,
+  fontSize: 13,
+  fontFamily: 'inherit',
+  outline: 'none',
+  boxSizing: 'border-box',
+  transition: 'border-color 0.15s, box-shadow 0.15s',
+};
+
+const focusedInput: CSSProperties = {
+  ...baseInput,
+  borderColor: C.borderFocus,
+  background: '#fff',
+  boxShadow: `0 0 0 3px ${C.accentLight}`,
+};
+
+const labelStyle: CSSProperties = {
+  display: 'block',
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: '0.07em',
+  textTransform: 'uppercase',
+  color: C.textMuted,
+  marginBottom: 6,
+};
+
+const cardStyle: CSSProperties = {
+  background: C.surface,
+  border: `1px solid ${C.border}`,
+  borderRadius: 12,
+  overflow: 'hidden',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+};
+
+const cardHeaderStyle: CSSProperties = {
+  padding: '14px 22px',
+  borderBottom: `1px solid ${C.border}`,
+  background: '#FAFAF9',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 10,
+};
+
+/* ─── Field ──────────────────────────────────────────────────────────── */
+const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode }> = ({ label, hint, children }) => (
+  <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <label style={labelStyle}>
+      {label}
+      {hint && <span style={{ fontSize: 11, color: C.textLight, fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 6 }}>{hint}</span>}
+    </label>
+    {children}
+  </div>
+);
+
+/* ─── Section Heading ────────────────────────────────────────────────── */
+const SectionHeading: React.FC<{ icon: React.ElementType; title: string; desc: string }> = ({ icon: Icon, title, desc }) => (
+  <div style={cardHeaderStyle}>
+    <div style={{ width: 32, height: 32, borderRadius: 8, background: C.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <Icon size={15} color={C.accent} />
+    </div>
+    <div>
+      <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.text }}>{title}</p>
+      <p style={{ margin: 0, fontSize: 12, color: C.textMuted, marginTop: 1 }}>{desc}</p>
+    </div>
+  </div>
+);
+
+/* ─── AdminApp ───────────────────────────────────────────────────────── */
 const AdminApp: React.FC = () => {
-  const [content, setContent] = useState<ContentState | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [content, setContent]           = useState<ContentState | null>(null);
+  const [loading, setLoading]           = useState(false);
+  const [saving, setSaving]             = useState(false);
+  const [message, setMessage]           = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [activeSection, setActiveSection] = useState<Section>('site');
+  const [focused, setFocused]           = useState<string | null>(null);
 
   useEffect(() => {
-    // Trong môi trường dev (npm run dev với Vite), /api/content không phải là API thật,
-    // nên ta dùng luôn dữ liệu local từ file JSON.
     if (import.meta.env.DEV) {
-      setContent({
-        site: siteContentInitial,
-        navigation: navigationInitial,
-        products: productsInitial,
-      });
-      setMessage('Đang dùng dữ liệu local (DEV mode). API GitHub chỉ hoạt động trên Vercel.');
+      setContent({ site: siteContentInitial, navigation: navigationInitial, products: productsInitial });
+      setMessage({ type: 'info', text: 'Đang dùng dữ liệu local — DEV mode.' });
       return;
     }
-
-    const fetchContent = async () => {
+    (async () => {
       setLoading(true);
       try {
         const res = await fetch('/api/content');
-        if (!res.ok) throw new Error('Không thể tải dữ liệu');
-        const data = await res.json();
-        setContent(data);
-      } catch (error) {
-        console.error(error);
-        // Fallback: dùng dữ liệu hiện tại trong repo nếu API chưa cấu hình
-        setContent({
-          site: siteContentInitial,
-          navigation: navigationInitial,
-          products: productsInitial,
-        });
-        setMessage('Đang dùng dữ liệu local (API chưa cấu hình hoặc lỗi).');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContent();
+        if (!res.ok) throw new Error();
+        setContent(await res.json());
+      } catch {
+        setContent({ site: siteContentInitial, navigation: navigationInitial, products: productsInitial });
+        setMessage({ type: 'info', text: 'Dùng dữ liệu local (API chưa cấu hình).' });
+      } finally { setLoading(false); }
+    })();
   }, []);
 
   const handleFieldChange = (path: string[], value: any) => {
-    if (!content) return;
-    setContent((prev) => {
+    setContent(prev => {
       if (!prev) return prev;
       const draft: any = structuredClone(prev);
-      let cursor: any = draft;
-      for (let i = 0; i < path.length - 1; i++) {
-        cursor = cursor[path[i]];
-      }
-      cursor[path[path.length - 1]] = value;
+      let cur: any = draft;
+      for (let i = 0; i < path.length - 1; i++) cur = cur[path[i]];
+      cur[path[path.length - 1]] = value;
       return draft;
     });
   };
 
   const handleSave = async () => {
     if (!content) return;
-    setSaving(true);
-    setMessage(null);
+    setSaving(true); setMessage(null);
     try {
       const res = await fetch('/api/content', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(content),
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || 'Lưu thất bại');
-      }
-      setMessage('Lưu thành công! Hãy kiểm tra GitHub và đợi Vercel build lại.');
-    } catch (error: any) {
-      console.error(error);
-      setMessage(`Lỗi khi lưu: ${error.message || 'Không xác định'}`);
-    } finally {
-      setSaving(false);
-    }
+      if (!res.ok) throw new Error((await res.text()) || 'Lưu thất bại');
+      setMessage({ type: 'success', text: 'Lưu thành công! Vercel đang build lại...' });
+    } catch (e: any) {
+      setMessage({ type: 'error', text: `Lỗi: ${e.message || 'Không xác định'}` });
+    } finally { setSaving(false); }
   };
 
+  const inp = (id: string): CSSProperties => focused === id ? focusedInput : baseInput;
+  const ta  = (id: string): CSSProperties => ({ ...inp(id), resize: 'vertical' as const, minHeight: 90, lineHeight: '1.6' });
+
+  /* Loading */
   if (loading || !content) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-950 text-stone-100">
-        <p>Đang tải dữ liệu cấu hình...</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.bg, fontFamily: 'system-ui, sans-serif' }}>
+        <div style={{ textAlign: 'center' }}>
+          <Coffee size={32} color={C.accent} style={{ display: 'block', margin: '0 auto 10px' }} />
+          <p style={{ margin: 0, fontSize: 13, color: C.textMuted }}>Đang tải dữ liệu...</p>
+        </div>
       </div>
     );
   }
 
-  const { site, navigation, products } = content;
+  const { site, products } = content;
 
+  const navItems: { id: Section; label: string; icon: React.ElementType; desc: string }[] = [
+    { id: 'site',     label: 'Thông tin Site', icon: Settings, desc: 'Title, favicon, mô tả' },
+    { id: 'hero',     label: 'Hero Banner',    icon: Home,     desc: 'Ảnh nền, tiêu đề' },
+    { id: 'products', label: 'Sản phẩm',       icon: Package,  desc: `${products.products.length} mục` },
+  ];
+
+  const bannerBg    = message?.type === 'success' ? C.greenBg  : message?.type === 'error' ? C.redBg  : C.infoBg;
+  const bannerBorder= message?.type === 'success' ? '#A7F3D0'  : message?.type === 'error' ? '#FECACA': '#FDE68A';
+  const bannerColor = message?.type === 'success' ? C.green    : message?.type === 'error' ? C.red    : C.infoText;
+
+  /* ════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
-      <header className="border-b border-stone-800 px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-semibold">Admin – Cấu hình Gilka Coffee</h1>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-4 py-2 rounded bg-emerald-500 hover:bg-emerald-400 text-sm font-semibold disabled:opacity-50"
-        >
-          {saving ? 'Đang lưu...' : 'Lưu & Commit lên GitHub'}
-        </button>
+    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif", display: 'flex', flexDirection: 'column' }}>
+
+      {/* ══ HEADER ══ */}
+      <header style={{ position: 'sticky', top: 0, zIndex: 100, background: C.surface, borderBottom: `1px solid ${C.border}`, boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}>
+        <div style={{ maxWidth: 1160, margin: '0 auto', padding: '0 28px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+
+          {/* brand */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 9, background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Coffee size={18} color="#fff" />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Gilka Coffee</p>
+              <p style={{ margin: 0, fontSize: 11, color: C.textMuted }}>Admin Panel</p>
+            </div>
+          </div>
+
+          {/* breadcrumb */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: C.textMuted, flex: 1, justifyContent: 'center' }}>
+            <span>Dashboard</span>
+            <ChevronRight size={12} />
+            <span style={{ color: C.text, fontWeight: 600 }}>{navItems.find(n => n.id === activeSection)?.label}</span>
+          </div>
+
+          {/* save */}
+          <button onClick={handleSave} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 18px', borderRadius: 8, background: saving ? '#D4A04A' : C.accent, color: '#fff', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 700, fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(200,134,10,0.3)', flexShrink: 0 }}>
+            {saving ? <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> : <Save size={14} />}
+            {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+          </button>
+        </div>
       </header>
 
+      {/* ══ BANNER ══ */}
       {message && (
-        <div className="px-6 py-3 text-sm bg-stone-900 border-b border-stone-800">
-          {message}
+        <div style={{ padding: '10px 28px', background: bannerBg, borderBottom: `1px solid ${bannerBorder}`, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 500, color: bannerColor }}>
+          {message.type === 'success' && <CheckCircle size={14} />}
+          {message.type === 'error'   && <XCircle size={14} />}
+          {message.type === 'info'    && <Coffee size={14} />}
+          <span>{message.text}</span>
         </div>
       )}
 
-      <main className="px-6 py-6 space-y-8 max-w-5xl mx-auto">
-        {/* Site */}
-        <section className="bg-stone-900 border border-stone-800 rounded-xl p-4 space-y-4">
-          <h2 className="text-lg font-semibold">Thông tin site</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="block text-xs uppercase text-stone-400 mb-1">Title</label>
-              <input
-                className="w-full bg-stone-950 border border-stone-700 rounded px-3 py-2 text-sm"
-                value={site.site.title}
-                onChange={(e) => handleFieldChange(['site', 'site', 'title'], e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-xs uppercase text-stone-400 mb-1">Favicon path</label>
-              <input
-                className="w-full bg-stone-950 border border-stone-700 rounded px-3 py-2 text-sm"
-                value={site.site.faviconPath}
-                onChange={(e) => handleFieldChange(['site', 'site', 'faviconPath'], e.target.value)}
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs uppercase text-stone-400 mb-1">Mô tả</label>
-            <textarea
-              className="w-full bg-stone-950 border border-stone-700 rounded px-3 py-2 text-sm"
-              rows={3}
-              value={site.site.description}
-              onChange={(e) => handleFieldChange(['site', 'site', 'description'], e.target.value)}
-            />
-          </div>
-        </section>
+      {/* ══ LAYOUT ══ */}
+      <div style={{ flex: 1, maxWidth: 1160, margin: '0 auto', width: '100%', padding: '28px 28px 48px', display: 'flex', gap: 22, alignItems: 'flex-start', boxSizing: 'border-box' }}>
 
-        {/* Hero */}
-        <section className="bg-stone-900 border border-stone-800 rounded-xl p-4 space-y-4">
-          <h2 className="text-lg font-semibold">Hero</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <label className="block text-xs uppercase text-stone-400 mb-1">Background image URL</label>
-              <input
-                className="w-full bg-stone-950 border border-stone-700 rounded px-3 py-2 text-sm"
-                value={site.hero.backgroundImage}
-                onChange={(e) => handleFieldChange(['site', 'hero', 'backgroundImage'], e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-xs uppercase text-stone-400 mb-1">Tiêu đề (dùng \\n để xuống dòng)</label>
-              <textarea
-                className="w-full bg-stone-950 border border-stone-700 rounded px-3 py-2 text-sm"
-                rows={3}
-                value={site.hero.title}
-                onChange={(e) => handleFieldChange(['site', 'hero', 'title'], e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-xs uppercase text-stone-400 mb-1">Mô tả</label>
-              <textarea
-                className="w-full bg-stone-950 border border-stone-700 rounded px-3 py-2 text-sm"
-                rows={3}
-                value={site.hero.subtitle}
-                onChange={(e) => handleFieldChange(['site', 'hero', 'subtitle'], e.target.value)}
-              />
-            </div>
-          </div>
-        </section>
+        {/* ── SIDEBAR ── */}
+        <aside style={{ width: 210, flexShrink: 0, position: 'sticky', top: 88 }}>
+          <p style={{ margin: '0 0 8px 6px', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.textLight }}>Điều hướng</p>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {navItems.map(({ id, label, icon: Icon, desc }) => {
+              const active = activeSection === id;
+              return (
+                <button key={id} onClick={() => setActiveSection(id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 9, border: 'none', background: active ? C.accent : 'transparent', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'background 0.12s' }}
+                  onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = C.accentLight; }}
+                  onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                >
+                  <Icon size={15} color={active ? '#fff' : C.textMuted} style={{ flexShrink: 0 }} />
+                  <div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: active ? '#fff' : C.text }}>{label}</p>
+                    <p style={{ margin: 0, fontSize: 11, color: active ? 'rgba(255,255,255,0.6)' : C.textLight, marginTop: 1 }}>{desc}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
 
-        {/* Products (only basic fields) */}
-        <section className="bg-stone-900 border border-stone-800 rounded-xl p-4 space-y-4">
-          <h2 className="text-lg font-semibold">Sản phẩm</h2>
-          <p className="text-xs text-stone-400">
-            (Phiên bản đơn giản – chỉnh sửa nhanh tên, giá, ảnh. Khi cần nâng cấp, có thể mở rộng sau.)
-          </p>
-          <div className="space-y-4">
-            {products.products.map((p: Product, idx: number) => (
-              <div key={p.id} className="border border-stone-800 rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-stone-500">ID: {p.id}</span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-stone-800">
-                    {p.category}
-                  </span>
+        {/* ── MAIN ── */}
+        <main style={{ flex: 1, minWidth: 0 }}>
+
+          {/* SITE */}
+          {activeSection === 'site' && (
+            <div style={cardStyle}>
+              <SectionHeading icon={Settings} title="Thông tin Site" desc="Title, favicon, mô tả chung của website" />
+              <div style={{ padding: '22px 22px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <Field label="Title Website">
+                    <input style={inp('title')} value={site.site.title} onFocus={() => setFocused('title')} onBlur={() => setFocused(null)} onChange={e => handleFieldChange(['site', 'site', 'title'], e.target.value)} placeholder="Tên website..." />
+                  </Field>
+                  <Field label="Favicon Path">
+                    <input style={inp('fav')} value={site.site.faviconPath} onFocus={() => setFocused('fav')} onBlur={() => setFocused(null)} onChange={e => handleFieldChange(['site', 'site', 'faviconPath'], e.target.value)} placeholder="/favicon.ico" />
+                  </Field>
                 </div>
-                <div className="grid gap-2 md:grid-cols-2">
-                  <div>
-                    <label className="block text-xs uppercase text-stone-400 mb-1">Tên</label>
-                    <input
-                      className="w-full bg-stone-950 border border-stone-700 rounded px-3 py-2 text-xs"
-                      value={p.name}
-                      onChange={(e) =>
-                        handleFieldChange(['products', 'products', idx.toString(), 'name'], e.target.value)
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs uppercase text-stone-400 mb-1">Giá (VNĐ)</label>
-                    <input
-                      type="number"
-                      className="w-full bg-stone-950 border border-stone-700 rounded px-3 py-2 text-xs"
-                      value={p.price}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          ['products', 'products', idx.toString(), 'price'],
-                          Number(e.target.value || 0)
-                        )
-                      }
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs uppercase text-stone-400 mb-1">Ảnh</label>
-                  <input
-                    className="w-full bg-stone-950 border border-stone-700 rounded px-3 py-2 text-xs"
-                    value={p.imageUrl}
-                    onChange={(e) =>
-                      handleFieldChange(['products', 'products', idx.toString(), 'imageUrl'], e.target.value)
-                    }
-                  />
+                <Field label="Mô tả Website" hint="Hiển thị trên Google & tab trình duyệt">
+                  <textarea style={ta('desc')} value={site.site.description} onFocus={() => setFocused('desc')} onBlur={() => setFocused(null)} onChange={e => handleFieldChange(['site', 'site', 'description'], e.target.value)} placeholder="Mô tả ngắn..." />
+                </Field>
+              </div>
+            </div>
+          )}
+
+          {/* HERO */}
+          {activeSection === 'hero' && (
+            <div style={cardStyle}>
+              <SectionHeading icon={Home} title="Hero Banner" desc="Ảnh nền và nội dung phần đầu trang chủ" />
+              <div style={{ padding: '22px 22px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <Field label="URL Hình nền">
+                  <input style={inp('bg')} value={site.hero.backgroundImage} onFocus={() => setFocused('bg')} onBlur={() => setFocused(null)} onChange={e => handleFieldChange(['site', 'hero', 'backgroundImage'], e.target.value)} placeholder="https://..." />
+                  {site.hero.backgroundImage && (
+                    <div style={{ marginTop: 10, borderRadius: 8, overflow: 'hidden', height: 130, border: `1px solid ${C.border}`, background: '#f0ede8' }}>
+                      <img src={site.hero.backgroundImage} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    </div>
+                  )}
+                </Field>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <Field label="Tiêu đề chính" hint="dùng \n xuống dòng">
+                    <textarea style={{ ...ta('htitle'), minHeight: 100 }} value={site.hero.title} onFocus={() => setFocused('htitle')} onBlur={() => setFocused(null)} onChange={e => handleFieldChange(['site', 'hero', 'title'], e.target.value)} />
+                  </Field>
+                  <Field label="Mô tả phụ">
+                    <textarea style={{ ...ta('hsub'), minHeight: 100 }} value={site.hero.subtitle} onFocus={() => setFocused('hsub')} onBlur={() => setFocused(null)} onChange={e => handleFieldChange(['site', 'hero', 'subtitle'], e.target.value)} />
+                  </Field>
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
-      </main>
+            </div>
+          )}
+
+          {/* PRODUCTS */}
+          {activeSection === 'products' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* heading */}
+              <div style={cardStyle}>
+                <SectionHeading icon={Package} title="Quản lý Sản phẩm" desc={`${products.products.length} sản phẩm · Chỉnh sửa tên, giá, hình ảnh`} />
+              </div>
+
+              {products.products.map((p: Product, idx: number) => (
+                <div key={p.id} style={cardStyle}>
+                  {/* row header */}
+                  <div style={{ padding: '9px 18px', borderBottom: `1px solid ${C.border}`, background: '#FAFAF9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: 11, color: C.textLight }}>#{p.id}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{p.name}</span>
+                    </div>
+                    <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: C.accentLight, color: C.accentText }}>{p.category}</span>
+                  </div>
+
+                  {/* row body */}
+                  <div style={{ padding: '14px 18px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                    {/* thumbnail */}
+                    <div style={{ width: 72, height: 72, borderRadius: 8, overflow: 'hidden', border: `1px solid ${C.border}`, background: '#f0ede8', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {p.imageUrl
+                        ? <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        : <Package size={18} color={C.border} />
+                      }
+                    </div>
+
+                    {/* fields */}
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 170px', gap: 12 }}>
+                        <Field label="Tên sản phẩm">
+                          <input style={inp(`n${idx}`)} value={p.name} onFocus={() => setFocused(`n${idx}`)} onBlur={() => setFocused(null)} onChange={e => handleFieldChange(['products', 'products', idx.toString(), 'name'], e.target.value)} />
+                        </Field>
+                        <Field label="Giá (VNĐ)">
+                          <input type="number" style={inp(`p${idx}`)} value={p.price} onFocus={() => setFocused(`p${idx}`)} onBlur={() => setFocused(null)} onChange={e => handleFieldChange(['products', 'products', idx.toString(), 'price'], Number(e.target.value || 0))} />
+                        </Field>
+                      </div>
+                      <Field label="URL hình ảnh">
+                        <input style={inp(`i${idx}`)} value={p.imageUrl} onFocus={() => setFocused(`i${idx}`)} onBlur={() => setFocused(null)} onChange={e => handleFieldChange(['products', 'products', idx.toString(), 'imageUrl'], e.target.value)} placeholder="https://example.com/product.jpg" />
+                      </Field>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+        </main>
+      </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } } * { box-sizing: border-box; } body { margin: 0; }`}</style>
     </div>
   );
 };
 
 export default AdminApp;
-
-
