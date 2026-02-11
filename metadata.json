@@ -1,0 +1,7 @@
+{
+  "name": "Gilka Coffee Clone - Premium Roastery",
+  "description": "A minimalist, high-end coffee store inspired by Gilka, featuring a Gemini-powered coffee recommendation assistant, product catalog, and seamless shopping experience.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
