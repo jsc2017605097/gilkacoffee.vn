@@ -42,17 +42,30 @@ async function getFileContent(path: string) {
 }
 
 async function putFileContent(path: string, content: string, sha: string, message: string) {
-  const body = {
+  const bodyBase = {
     message,
     content: Buffer.from(content, 'utf-8').toString('base64'),
-    sha,
     branch: BRANCH,
   };
 
-  await githubRequest(`/repos/${OWNER}/${REPO}/contents/${path}`, {
-    method: 'PUT',
-    body: JSON.stringify(body),
-  });
+  try {
+    await githubRequest(`/repos/${OWNER}/${REPO}/contents/${path}`, {
+      method: 'PUT',
+      body: JSON.stringify({ ...bodyBase, sha }),
+    });
+  } catch (error: any) {
+    // Nếu có conflict SHA (409) vì file vừa được cập nhật bởi lần lưu trước,
+    // ta lấy SHA mới nhất rồi thử lại một lần cho nhẹ đầu user.
+    if (error.message && error.message.includes('409')) {
+      const latest = await getFileContent(path);
+      await githubRequest(`/repos/${OWNER}/${REPO}/contents/${path}`, {
+        method: 'PUT',
+        body: JSON.stringify({ ...bodyBase, sha: latest.sha }),
+      });
+      return;
+    }
+    throw error;
+  }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
