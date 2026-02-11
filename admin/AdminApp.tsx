@@ -308,6 +308,17 @@ const AdminApp: React.FC = () => {
                     <textarea style={{ ...ta('hsub'), minHeight: 100 }} value={site.hero.subtitle} onFocus={() => setFocused('hsub')} onBlur={() => setFocused(null)} onChange={e => handleFieldChange(['site', 'hero', 'subtitle'], e.target.value)} />
                   </Field>
                 </div>
+
+                {/* Story badge: "Giao dịch trực tiếp" */}
+                <Field label="Badge câu chuyện" hint='Ví dụ: "Giao dịch trực tiếp" ở trên phần story'>
+                  <input
+                    style={inp('storyBadge')}
+                    value={site.sections.story.badge}
+                    onFocus={() => setFocused('storyBadge')}
+                    onBlur={() => setFocused(null)}
+                    onChange={e => handleFieldChange(['site', 'sections', 'story', 'badge'], e.target.value)}
+                  />
+                </Field>
               </div>
             </div>
           )}
