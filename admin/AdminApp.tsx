@@ -15,7 +15,7 @@ interface ContentState {
   products: ProductsContent;
 }
 
-type Section = 'site' | 'hero' | 'products';
+type Section = 'site' | 'hero' | 'products' | 'footer';
 
 /* ─── Design Tokens ──────────────────────────────────────────────────── */
 const C = {
@@ -120,7 +120,8 @@ const AdminApp: React.FC = () => {
   const [focused, setFocused]           = useState<string | null>(null);
 
   useEffect(() => {
-    if (import.meta.env.DEV) {
+    // @ts-ignore - Vite cung cấp import.meta.env nhưng TypeScript trong file này không biết type
+    if ((import.meta as any).env?.DEV) {
       setContent({ site: siteContentInitial, navigation: navigationInitial, products: productsInitial });
       setMessage({ type: 'info', text: 'Đang dùng dữ liệu local — DEV mode.' });
       return;
@@ -186,6 +187,7 @@ const AdminApp: React.FC = () => {
     { id: 'site',     label: 'Thông tin Site', icon: Settings, desc: 'Title, favicon, mô tả' },
     { id: 'hero',     label: 'Hero Banner',    icon: Home,     desc: 'Ảnh nền, tiêu đề' },
     { id: 'products', label: 'Sản phẩm',       icon: Package,  desc: `${products.products.length} mục` },
+    { id: 'footer',   label: 'Footer & Thương hiệu', icon: Settings, desc: 'Brand tagline, cột link, địa chỉ' },
   ];
 
   const bannerBg    = message?.type === 'success' ? C.greenBg  : message?.type === 'error' ? C.redBg  : C.infoBg;
@@ -356,6 +358,159 @@ const AdminApp: React.FC = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* FOOTER */}
+          {activeSection === 'footer' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={cardStyle}>
+                <SectionHeading
+                  icon={Settings}
+                  title="Footer & Thương hiệu"
+                  desc="Tagline, cột link, địa chỉ và phần pháp lý ở chân trang"
+                />
+                <div style={{ padding: '22px 22px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {/* Brand tagline */}
+                  <Field label="Brand tagline">
+                    <textarea
+                      style={{ ...ta('footerTagline'), minHeight: 70 }}
+                      value={site.sections.footer.brandTagline}
+                      onFocus={() => setFocused('footerTagline')}
+                      onBlur={() => setFocused(null)}
+                      onChange={e => handleFieldChange(['site', 'sections', 'footer', 'brandTagline'], e.target.value)}
+                    />
+                  </Field>
+                </div>
+              </div>
+
+              {/* Shop column */}
+              <div style={cardStyle}>
+                <div style={cardHeaderStyle}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>Cột "Cửa hàng"</p>
+                    <p style={{ margin: 0, fontSize: 12, color: C.textMuted }}>Tiêu đề và danh sách link bên trái footer</p>
+                  </div>
+                </div>
+                <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <Field label="Tiêu đề cột">
+                    <input
+                      style={inp('footerShopTitle')}
+                      value={site.sections.footer.shopColumn.title}
+                      onFocus={() => setFocused('footerShopTitle')}
+                      onBlur={() => setFocused(null)}
+                      onChange={e => handleFieldChange(['site', 'sections', 'footer', 'shopColumn', 'title'], e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Các link (mỗi dòng một mục)">
+                    <textarea
+                      style={{ ...ta('footerShopLinks'), minHeight: 90 }}
+                      value={site.sections.footer.shopColumn.links.join('\n')}
+                      onFocus={() => setFocused('footerShopLinks')}
+                      onBlur={() => setFocused(null)}
+                      onChange={e =>
+                        handleFieldChange(
+                          ['site', 'sections', 'footer', 'shopColumn', 'links'],
+                          e.target.value.split('\n').map(l => l.trim()).filter(Boolean),
+                        )
+                      }
+                    />
+                  </Field>
+                </div>
+              </div>
+
+              {/* Support column */}
+              <div style={cardStyle}>
+                <div style={cardHeaderStyle}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>Cột "Hỗ trợ"</p>
+                    <p style={{ margin: 0, fontSize: 12, color: C.textMuted }}>Các link về chính sách, hỗ trợ khách hàng</p>
+                  </div>
+                </div>
+                <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <Field label="Tiêu đề cột">
+                    <input
+                      style={inp('footerSupportTitle')}
+                      value={site.sections.footer.supportColumn.title}
+                      onFocus={() => setFocused('footerSupportTitle')}
+                      onBlur={() => setFocused(null)}
+                      onChange={e => handleFieldChange(['site', 'sections', 'footer', 'supportColumn', 'title'], e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Các link (mỗi dòng một mục)">
+                    <textarea
+                      style={{ ...ta('footerSupportLinks'), minHeight: 90 }}
+                      value={site.sections.footer.supportColumn.links.join('\n')}
+                      onFocus={() => setFocused('footerSupportLinks')}
+                      onBlur={() => setFocused(null)}
+                      onChange={e =>
+                        handleFieldChange(
+                          ['site', 'sections', 'footer', 'supportColumn', 'links'],
+                          e.target.value.split('\n').map(l => l.trim()).filter(Boolean),
+                        )
+                      }
+                    />
+                  </Field>
+                </div>
+              </div>
+
+              {/* Visit us & legal */}
+              <div style={cardStyle}>
+                <div style={cardHeaderStyle}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>Địa chỉ & Pháp lý</p>
+                    <p style={{ margin: 0, fontSize: 12, color: C.textMuted }}>Khối "Ghé thăm chúng tôi" và phần copyright dưới cùng</p>
+                  </div>
+                </div>
+                <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  <Field label="Tiêu đề khối địa chỉ">
+                    <input
+                      style={inp('footerVisitTitle')}
+                      value={site.sections.footer.visitUs.title}
+                      onFocus={() => setFocused('footerVisitTitle')}
+                      onBlur={() => setFocused(null)}
+                      onChange={e => handleFieldChange(['site', 'sections', 'footer', 'visitUs', 'title'], e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Địa chỉ (mỗi dòng một dòng địa chỉ)">
+                    <textarea
+                      style={{ ...ta('footerVisitAddress'), minHeight: 80 }}
+                      value={site.sections.footer.visitUs.addressLines.join('\n')}
+                      onFocus={() => setFocused('footerVisitAddress')}
+                      onBlur={() => setFocused(null)}
+                      onChange={e =>
+                        handleFieldChange(
+                          ['site', 'sections', 'footer', 'visitUs', 'addressLines'],
+                          e.target.value.split('\n').map(l => l.trim()).filter(Boolean),
+                        )
+                      }
+                    />
+                  </Field>
+                  <Field label="Copyright">
+                    <input
+                      style={inp('footerCopyright')}
+                      value={site.sections.footer.legal.copyright}
+                      onFocus={() => setFocused('footerCopyright')}
+                      onBlur={() => setFocused(null)}
+                      onChange={e => handleFieldChange(['site', 'sections', 'footer', 'legal', 'copyright'], e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Các link pháp lý (mỗi dòng một mục)">
+                    <textarea
+                      style={{ ...ta('footerLegalLinks'), minHeight: 70 }}
+                      value={site.sections.footer.legal.links.join('\n')}
+                      onFocus={() => setFocused('footerLegalLinks')}
+                      onBlur={() => setFocused(null)}
+                      onChange={e =>
+                        handleFieldChange(
+                          ['site', 'sections', 'footer', 'legal', 'links'],
+                          e.target.value.split('\n').map(l => l.trim()).filter(Boolean),
+                        )
+                      }
+                    />
+                  </Field>
+                </div>
+              </div>
             </div>
           )}
 
