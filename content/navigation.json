@@ -1,10 +1,20 @@
 {
   "navigation": [
-    { "name": "Cửa hàng", "href": "#/shop" },
-    { "name": "Đăng ký định kỳ", "href": "#/subscription" },
-    { "name": "Câu chuyện", "href": "#/story" },
-    { "name": "Hướng dẫn pha", "href": "#/guides" }
+    {
+      "name": "Cửa hàng",
+      "href": "#/shop"
+    },
+    {
+      "name": "Đăng ký định kỳ",
+      "href": "#/subscription"
+    },
+    {
+      "name": "Câu chuyện",
+      "href": "#/story"
+    },
+    {
+      "name": "Hướng dẫn pha",
+      "href": "#/guides"
+    }
   ]
 }
-
-
